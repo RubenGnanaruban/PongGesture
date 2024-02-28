@@ -1,6 +1,8 @@
 import pygame
 import random
 
+import utils.effects
+
 
 class GameWorld:
 
@@ -24,8 +26,10 @@ class GameWorld:
         self.ball_v_y = 6 * random.choice((1, -1))
         self.score_hit = 0
         self.score_miss = 0
-        self.level = 1
+        self.level_minus_1 = 0
         self.score_font = pygame.font.SysFont("Arial", self.pad_height)
+        self.score_sound = pygame.mixer.Sound("score.ogg")
+        self.miss_sound = pygame.mixer.Sound("pong.ogg")
 
     def resize(self, width, height):
         self.__resize(width, height)
@@ -38,7 +42,10 @@ class GameWorld:
 
     def score_up(self):
         self.score_hit += 1
-        self.level += 1
+        self.level_minus_1 += 1
+
+        pygame.mixer.Sound.play(self.score_sound)
+
         # Continue in the same direction with a speed increase of 1
         self.ball_v_x += self.ball_v_x/abs(self.ball_v_x)
         self.ball_v_y += self.ball_v_y / abs(self.ball_v_y)
@@ -46,32 +53,39 @@ class GameWorld:
     def score_down(self):
         self.score_miss += 1
 
+        pygame.mixer.Sound.play(self.miss_sound)
+
+    def difficulty_level_to_color(self):
+        # color is mapped from red to violet as the difficulty level goes
+        # up. Maximum difficulty can be hard coded
+        MAX_LEVEL = 50
+        wavelength = 750 - (370/MAX_LEVEL) * self.level_minus_1
+        return utils.effects.wavelength_to_rgb(wavelength)
+
     def render_elements(self, screen):
+        # Paddle
         pygame.draw.rect(screen, pygame.Color('chocolate1'), self.pad_rect)
-        pygame.draw.ellipse(screen, pygame.Color('firebrick1'), self.ball_rect)
+
+        # Color of the ball is updated corresponding to the difficulty level
+        color_ball = self.difficulty_level_to_color()
+        pygame.draw.ellipse(screen, pygame.Color(color_ball), self.ball_rect)
 
         font_hits = self.score_font.render(str(self.score_hit), True,
                                            pygame.Color('white'))
         font_misses = self.score_font.render(str(self.score_miss), True,
                                              pygame.Color('white'))
-        font_level = self.score_font.render(str(self.level), True,
-                                            pygame.Color('white'))
 
         hits_rect = font_hits.get_rect(midleft=(self.game_width / 2 + 40,
                                                 self.pad_height))
         misses_rect = font_misses.get_rect(midright=(self.game_width / 2 - 40,
                                                      self.pad_height))
-        level_rect = font_level.get_rect(midleft=(40, self.pad_height))
 
         screen.blit(font_hits, hits_rect)
         screen.blit(font_misses, misses_rect)
-        screen.blit(font_level, level_rect)
 
     def update(self, pad_y):
         if pad_y:
             self.pad_rect.y = pad_y
-            # self.x = position(0)
-            # self.y = position(1)
             if self.pad_rect.top <= 0:
                 self.pad_rect.top = 0
             if self.pad_rect.bottom >= self.game_height:
