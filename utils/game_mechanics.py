@@ -165,6 +165,10 @@ class GameWorld3D(GameWorld2D):
         # Continue in the same direction with a speed increase of 1
         self.ball_v_z += self.ball_v_z / abs(self.ball_v_z)
 
+    # Using a simple transformation we project the 3d point onto the 2d
+    # screen. Single vanishing point projection is used where the vanishing
+    # point is set at the middle of the screen in x-y plane and at infinity
+    # along z direction.
     def scale_perspective(self, z):
         return 1 - (1 - SCALE_FACT_MIN) * z / self.game_depth
 
@@ -178,7 +182,7 @@ class GameWorld3D(GameWorld2D):
                      + self.game_width / 2)
         point2d_y = ((point3d[1] - self.game_height / 2) * scale_factor
                      + self.game_height / 2)
-        return int(point2d_x), int(point2d_y)
+        return [int(point2d_x), int(point2d_y)]
 
     def project_pad(self, screen):
         p1 = self.transform_to_2d((self.pad_rect.left, self.pad_rect.top,
@@ -203,14 +207,27 @@ class GameWorld3D(GameWorld2D):
                                      2 * ball_radius_proj)
         pygame.draw.ellipse(screen, pygame.Color(ball_color), ball_rect_proj)
 
-    def project_edges(self, screen, edge_color):
-        pygame.draw.aaline(screen, edge_color, (screen_width / 2, 0),
-                           (screen_width / 2, screen_height))
+    def render_cube_edges(self, screen, edge_color):
+        points_front_plane = [[0, 0],
+                              [self.game_width, 0],
+                              [self.game_width, self.game_height],
+                              [0, self.game_height]]
+
+        points_back_plane = []
+        for p_front in points_front_plane:
+            p_3d = p_front + [self.game_depth]
+            points_back_plane.append(self.transform_to_2d(p_3d))
+
+        for i in range(4):
+            pygame.draw.aaline(screen, edge_color, points_back_plane[i],
+                               points_front_plane[i])
+            pygame.draw.aaline(screen, edge_color, points_back_plane[i],
+                               points_back_plane[(i + 1) % 4])
 
     def render_elements(self, screen):
         # Paddle
         self.project_pad(screen)
-        pygame.draw.rect(screen, pygame.Color('chocolate1'), self.pad_rect)
+        # pygame.draw.rect(screen, pygame.Color('chocolate1'), self.pad_rect)
 
         # Color of the ball is updated corresponding to the difficulty level
         color_ball = self.difficulty_level_to_color()
