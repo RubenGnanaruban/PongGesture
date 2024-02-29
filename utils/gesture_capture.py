@@ -1,12 +1,13 @@
 import cv2
 from cvzone.HandTrackingModule import HandDetector
+import math
 
 
 class HandToPaddle:
 
     def __init__(self, hand_speed=3, hand_resting_height=0.25):
         self.hand_speed_factor = hand_speed
-        # self.paddle_half_h = 10
+        self.paddle_half_h = 10   # Not needed
         self.cap = cv2.VideoCapture(0)
         self.detector = HandDetector(maxHands=1)
 
@@ -16,8 +17,10 @@ class HandToPaddle:
         # Let's change the resting hand to the lower potion of the webcam for
         # better ergonomics
         self.hand_neutral_height = int(self.img_h * (1-hand_resting_height))
-        # self.paddle_xl = self.img_w - 10
-        # self.paddle_xr = self.img_w - 5
+        self.paddle_xl = self.img_w - 10  # Not needed
+        self.paddle_xr = self.img_w - 5  # Not needed
+        self.focus_factor = 50000
+        self.depth_cutoff = 900
 
     def update(self):
         self.success, self.img = self.cap.read()
@@ -36,4 +39,26 @@ class HandToPaddle:
                 return paddle_y
 
             # cv2.imshow("cam", self.img)
+            return False
+
+    def update3d(self):
+        self.success, self.img = self.cap.read()
+        if self.success:
+            hand, self.img = self.detector.findHands(self.img, draw=False)
+
+            if hand:
+                _, hand_height = hand[0]["center"]
+                hand_from_center = hand_height - self.hand_neutral_height
+                paddle_y = int(self.hand_neutral_height
+                               + hand_from_center * self.hand_speed_factor)
+                bbox = hand[0]["bbox"]
+                pad_z = self.depth_cutoff - int(self.focus_factor /
+                                                math.sqrt(bbox[2] * bbox[3]))
+                paddle_yl = max(paddle_y - self.paddle_half_h, 0)
+                paddle_yr = min(paddle_y + self.paddle_half_h, self.img_h)
+                cv2.rectangle(self.img, [self.paddle_xl, paddle_yl],
+                              [self.paddle_xr, paddle_yr], (255, 0, 0), -1)
+                return paddle_y, pad_z
+
+            cv2.imshow("cam", self.img)
             return False
