@@ -112,8 +112,9 @@ def play3d():
                 screen = pygame.display.set_mode((event.w, event.h),
                                                  pygame.RESIZABLE)
 
-        screen.fill("black")
+        # screen.fill("black")
         screen.blit(background, background_rect)
+        gw.render_cube_edges(screen, "White")
         gw.render_elements(screen)  # Need to uncomment
         pygame.display.flip()
         clock.tick(frame_rate)
