@@ -4,17 +4,15 @@ import sys
 import pyautogui
 
 pygame.init()
-# screen_width = pygame.display.Info().current_w
-# screen_height = pygame.display.Info().current_h
 screen_width = int(0.8 * pygame.display.Info().current_w)
 screen_height = int(0.8 * pygame.display.Info().current_h)
 refresh_rate = 30
-frame_rate = 20 * refresh_rate
+interpolation_steps = 50
+frame_rate = interpolation_steps * refresh_rate
 clock = pygame.time.Clock()
 
 screen = pygame.display.set_mode((screen_width, screen_height),
                                  pygame.RESIZABLE)
-# pygame.display.set_caption('Pong with Hand Gestures: Menu')
 background = pygame.image.load("bg_galaxy.png")
 background_rect = background.get_rect(topleft=(0, 0))
 visual_in = utils.gesture_capture.HandToPaddle()
@@ -88,19 +86,30 @@ def main():
                     sys.exit()
 
         pygame.display.update()
-        # pygame.display.flip()
-        clock.tick(frame_rate)
+        clock.tick(refresh_rate)
 
 
 def play2d_solo():
     pygame.display.set_caption('Pong with Hand Gestures: Hand Solo')
     global screen
     gw = utils.game_mechanics.GameWorld2D(screen_width, screen_height)
-    # visual_in = utils.gesture_capture.HandToPaddle()
+
+    # Screen and camera are limited by their frame rates. But running the
+    # whole model at that slow rate would make the delta displacements too
+    # much to account for collisions (at higher speeds).
+    # Therefore, we decouple updating the elements and renderings.
+    # flag_dont_render is used to skip rendering for all but onc in every 50
+    # interpolation_steps
+
+    flag_dont_render = 1
+    pad_updated = visual_in.update2d()
 
     run = True
     while run:
-        gw.update(visual_in.update())
+        if not (flag_dont_render % interpolation_steps):
+            pad_updated = visual_in.update2d()
+
+        gw.update(pad_updated)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -115,26 +124,33 @@ def play2d_solo():
                 screen = pygame.display.set_mode((event.w, event.h),
                                                  pygame.RESIZABLE)
 
-        # screen.fill("black")
-        screen.blit(background, background_rect)
-        gw.render_elements(screen)
-        pygame.display.flip()
+        if not (flag_dont_render % interpolation_steps):
+            # screen.fill("black")
+            screen.blit(background, background_rect)
+            gw.render_elements(screen)
+            pygame.display.flip()
+
+        flag_dont_render = (flag_dont_render + 1) % interpolation_steps
         clock.tick(frame_rate)
 
     main()
 
 
 def play3d_solo():
-    pygame.display.set_caption('Pong with Hand Gestures: 3D Galaxy Far Far '
-                               'Away')
+    pygame.display.set_caption('Pong with Hand Gestures: in a 3D Galaxy Far '
+                               'Far Away')
     global screen
     gw = utils.game_mechanics.GameWorld3D(screen_width, screen_height,
                                           screen_height)
-    # visual_in = utils.gesture_capture.HandToPaddle()
+    flag_dont_render = 1
+    pad_updated = visual_in.update3d()
 
     run = True
     while run:
-        gw.update(visual_in.update3d())
+        if not (flag_dont_render % interpolation_steps):
+            pad_updated = visual_in.update3d()
+
+        gw.update(pad_updated)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -149,11 +165,14 @@ def play3d_solo():
                 screen = pygame.display.set_mode((event.w, event.h),
                                                  pygame.RESIZABLE)
 
-        # screen.fill("black")
-        screen.blit(background, background_rect)
-        gw.render_cube_edges(screen, "White")
-        gw.render_elements(screen)  # Need to uncomment
-        pygame.display.flip()
+        if not (flag_dont_render % interpolation_steps):
+            # screen.fill("black")
+            screen.blit(background, background_rect)
+            gw.render_cube_edges(screen, "White")
+            gw.render_elements(screen)  # Need to uncomment
+            pygame.display.flip()
+
+        flag_dont_render = (flag_dont_render + 1) % interpolation_steps
         clock.tick(frame_rate)
 
     main()

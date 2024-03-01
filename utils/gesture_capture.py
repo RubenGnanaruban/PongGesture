@@ -8,7 +8,7 @@ class HandToPaddle:
 
     def __init__(self, hand_speed=3, hand_resting_height=0.25):
         self.hand_speed_factor = hand_speed
-        self.paddle_half_h = 10   # Not needed
+        # self.paddle_half_h = 10   # Not needed
         self.cap = cv2.VideoCapture(0)
         self.detector = HandDetector(maxHands=1)
 
@@ -21,7 +21,7 @@ class HandToPaddle:
         self.focus_factor = 50000
         self.depth_cutoff = 900
 
-    def update(self):
+    def update2d(self):
         self.success, self.img = self.cap.read()
         if self.success:
             hand, self.img = self.detector.findHands(self.img, draw=False)
@@ -95,10 +95,10 @@ class HandToPaddle:
                 bbox = hand[0]["bbox"]
                 pad_z = self.depth_cutoff - int(self.focus_factor /
                                                 math.sqrt(bbox[2] * bbox[3]))
-                paddle_yl = max(paddle_y - self.paddle_half_h, 0)
-                paddle_yr = min(paddle_y + self.paddle_half_h, self.img_h)
-                cv2.rectangle(self.img, [paddle_xl, paddle_yl],
-                              [paddle_xr, paddle_yr], (255, 0, 0), -1)
+                # paddle_yl = max(paddle_y - self.paddle_half_h, 0)
+                # paddle_yr = min(paddle_y + self.paddle_half_h, self.img_h)
+                # cv2.rectangle(self.img, [paddle_xl, paddle_yl],
+                #               [paddle_xr, paddle_yr], (255, 0, 0), -1)
                 return paddle_y, pad_z
             cv2.imshow("cam", self.img)
             return False

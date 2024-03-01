@@ -4,7 +4,9 @@ import utils.effects
 
 TOL_DIST = 10
 SCALE_FACT_MIN = 0.5
-PAD_FACTOR = 0.25
+PAD_FACTOR = 0.2
+V_DEL = 0.02
+FRICTION_FACTOR = 0.2
 
 
 class GameWorld2D:
@@ -25,23 +27,33 @@ class GameWorld2D:
     def __init__(self, width, height):
         self.pad_width = 20
         self.__resize(width, height)
-        self.ball_v_x = 8 * random.choice((1, -1))
-        self.ball_v_y = 6 * random.choice((1, -1))
+        self.ball_v_x = 9 * V_DEL * random.choice((1, -1))
+        self.ball_v_y = 10 * V_DEL * random.choice((1, -1))
         self.score_hit = 0
         self.score_miss = 0
         self.level_minus_1 = 0
         self.score_font = pygame.font.SysFont("Arial", self.pad_height)
         self.score_sound = pygame.mixer.Sound("score.ogg")
         self.miss_sound = pygame.mixer.Sound("pong.ogg")
+        self.ball_x = width / 2
+        self.ball_y = height / 2
+        self.pad_y = height / 2
+        self.pad_v_y_avg = 0
 
     def resize(self, width, height):
         self.__resize(width, height)
+        self.ball_x = width / 2
+        self.ball_y = height / 2
+        self.pad_y = height / 2
 
     def restart(self):
         self.ball_rect.x = int(0.5 * self.game_width)
         self.ball_rect.y = int(0.5 * self.game_height)
         self.ball_v_x *= random.choice((1, -1))
         self.ball_v_y *= random.choice((1, -1))
+        self.ball_x = self.game_width / 2
+        self.ball_y = self.game_width / 2
+        self.pad_y = self.ball_y
 
     def score_up(self):
         self.score_hit += 1
@@ -50,8 +62,8 @@ class GameWorld2D:
         pygame.mixer.Sound.play(self.score_sound)
 
         # Continue in the same direction with a speed increase of 1
-        self.ball_v_x += self.ball_v_x / abs(self.ball_v_x)
-        self.ball_v_y += self.ball_v_y / abs(self.ball_v_y)
+        self.ball_v_x += V_DEL * self.ball_v_x / abs(self.ball_v_x)
+        self.ball_v_y += V_DEL * self.ball_v_y / abs(self.ball_v_y)
 
     def score_down(self):
         self.score_miss += 1
@@ -61,7 +73,7 @@ class GameWorld2D:
     def difficulty_level_to_color(self):
         # color is mapped from red to violet as the difficulty level goes
         # up. Maximum difficulty can be hard coded
-        MAX_LEVEL = 40
+        MAX_LEVEL = 50
         wavelength = 750 - (370/MAX_LEVEL) * self.level_minus_1
         return utils.effects.wavelength_to_rgb(wavelength)
 
@@ -88,31 +100,53 @@ class GameWorld2D:
 
     def update(self, pad_y):
         if pad_y:
+            # First we find the average velocity of the pad. Time delta will
+            # be taken into account via a factor later
+            self.pad_v_y_avg = pad_y - self.pad_y
+            self.pad_y = pad_y
             self.pad_rect.y = pad_y
             if self.pad_rect.top <= 0:
                 self.pad_rect.top = 0
+                self.pad_y = self.pad_rect.y
             if self.pad_rect.bottom >= self.game_height:
                 self.pad_rect.bottom = self.game_height
+                self.pad_y = self.pad_rect.y
 
-        self.ball_rect.x += self.ball_v_x
-        self.ball_rect.y += self.ball_v_y
+        self.ball_x += self.ball_v_x
+        self.ball_y += self.ball_v_y
+        self.ball_rect.x = int(self.ball_x)
+        self.ball_rect.y = int(self.ball_y)
 
         # Bouncing off the paddle
         if self.ball_rect.colliderect(self.pad_rect) and self.ball_v_x > 0:
             self.score_up()
             # primary paddle surface
             if abs(self.ball_rect.right - self.pad_rect.left) < TOL_DIST:
-                self.ball_v_x *= -1
+                self.ball_v_x *= -1  # elastic collision, e = 1
+                # Let's address the Kinetic friction due to the impulse
+                # (J_x = 2 * mass * v_x).
+                # Simplifying
+                # Impulsive friction J_y = mu_kinetic * J_x. Combining, we get
+                # Del_v_y = sign(v_pad_y - v_ball_y) * 2 * mu_kinetic * v_x
+                # ball_v_y_final = ball_v_y_initial (+/-) 2 * mu_kinetic * v_x
+                # (Taking static friction, and non-linear mu_kinetic)
+
+                sign_of_friction = self.pad_v_y_avg - self.ball_v_y
+                sign_of_friction /= abs(sign_of_friction)
+                self.ball_v_y += (sign_of_friction * FRICTION_FACTOR
+                                  * abs(self.ball_v_x))
 
             # top edge of the paddle
             if (abs(self.ball_rect.bottom - self.pad_rect.top) < TOL_DIST and
                     self.ball_v_y > 0):
                 self.ball_v_y *= -1
+                # Need to add friction
 
             # bottom edge of the paddle
             if (abs(self.ball_rect.top - self.pad_rect.bottom) < TOL_DIST and
                     self.ball_v_y < 0):
                 self.ball_v_y *= -1
+                # Need to add friction
 
         # Collision with top and bottom boundaries
         if (self.ball_rect.top <= 0
@@ -149,22 +183,29 @@ class GameWorld3D(GameWorld2D):
     def __init__(self, width, height, depth):
         GameWorld2D.__init__(self, width, height)
         self.__resize3d(width, depth)
-        self.ball_v_z = 4 * random.choice((1, -1))
+        self.ball_z = depth / 2
+        self.pad_z = depth / 2
+        self.pad_v_z_avg = 0
+        self.ball_v_z = 9 * V_DEL * random.choice((1, -1))
 
     def resize(self, width, height):
         GameWorld2D.resize(self, width, height)
         # When resizing the game window, make the depth the same as the height
         self.__resize3d(width, height)
+        self.ball_z = height / 2
+        self.pad_z = height / 2
 
     def restart(self):
         GameWorld2D.restart(self)
         self.ball_rect_bottom_view.y = int(0.5 * self.game_depth)
         self.ball_v_z *= random.choice((1, -1))
+        self.ball_z = self.game_depth / 2
+        self.pad_z = self.ball_z
 
     def score_up(self):
         GameWorld2D.score_up(self)
         # Continue in the same direction with a speed increase of 1
-        self.ball_v_z += self.ball_v_z / abs(self.ball_v_z)
+        self.ball_v_z += V_DEL * self.ball_v_z / abs(self.ball_v_z)
 
     # Using a simple transformation we project the 3d point onto the 2d
     # screen. Single vanishing point projection is used where the vanishing
@@ -250,24 +291,38 @@ class GameWorld3D(GameWorld2D):
 
     def update(self, pad_yz):
         if pad_yz:
+            # First we find the average velocity of the pad. Time delta will
+            # be taken into account via a factor later
+
             # Update the paddle y position
+            self.pad_v_y_avg = pad_yz[0] - self.pad_y
+            self.pad_y = pad_yz[0]
             self.pad_rect.y = pad_yz[0]
             if self.pad_rect.top <= 0:
                 self.pad_rect.top = 0
+                self.pad_y = self.pad_rect.y
             if self.pad_rect.bottom >= self.game_height:
                 self.pad_rect.bottom = self.game_height
+                self.pad_y = self.pad_rect.y
 
             # Update the paddle z position
+            self.pad_v_z_avg = pad_yz[1] - self.pad_z
+            self.pad_z = pad_yz[1]
             self.pad_rect_bottom_view.y = pad_yz[1]
             if self.pad_rect_bottom_view.top <= 0:
                 self.pad_rect_bottom_view.top = 0
+                self.pad_z = self.pad_rect_bottom_view.y
             if self.pad_rect_bottom_view.bottom >= self.game_depth:
                 self.pad_rect_bottom_view.bottom = self.game_depth
+                self.pad_z = self.pad_rect_bottom_view.y
 
-        self.ball_rect.x += self.ball_v_x
-        self.ball_rect.y += self.ball_v_y
-        self.ball_rect_bottom_view.x += self.ball_v_x
-        self.ball_rect_bottom_view.y += self.ball_v_z
+        self.ball_x += self.ball_v_x
+        self.ball_y += self.ball_v_y
+        self.ball_z += self.ball_v_z
+        self.ball_rect_bottom_view.x = int(self.ball_x)
+        self.ball_rect_bottom_view.y = int(self.ball_z)
+        self.ball_rect.x = int(self.ball_x)
+        self.ball_rect.y = int(self.ball_y)
 
         # Bouncing off the paddle if collision detected on both views
         if self.ball_rect.colliderect(self.pad_rect) and self.ball_v_x > 0\
@@ -278,15 +333,27 @@ class GameWorld3D(GameWorld2D):
             if abs(self.ball_rect.right - self.pad_rect.left) < TOL_DIST:
                 self.ball_v_x *= -1
 
+                sign_of_friction_y = self.pad_v_y_avg - self.ball_v_y
+                sign_of_friction_y /= abs(sign_of_friction_y)
+                self.ball_v_y += (sign_of_friction_y * FRICTION_FACTOR
+                                  * abs(self.ball_v_x))
+
+                sign_of_friction_z = self.pad_v_z_avg - self.ball_v_z
+                sign_of_friction_z /= abs(sign_of_friction_z)
+                self.ball_v_z += (sign_of_friction_z * FRICTION_FACTOR
+                                  * abs(self.ball_v_x))
+
             # top edge of the paddle
             if (abs(self.ball_rect.bottom - self.pad_rect.top) < TOL_DIST and
                     self.ball_v_y > 0):
                 self.ball_v_y *= -1
+                # Need to add friction
 
             # bottom edge of the paddle
             if (abs(self.ball_rect.top - self.pad_rect.bottom) < TOL_DIST and
                     self.ball_v_y < 0):
                 self.ball_v_y *= -1
+                # Need to add friction
 
             # side edge of the paddle closer to the player
             if (abs(self.ball_rect_bottom_view.bottom
