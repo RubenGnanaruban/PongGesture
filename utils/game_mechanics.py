@@ -2,8 +2,9 @@ import pygame
 import random
 import utils.effects
 
-TOL_DIST = 5
+TOL_DIST = 10
 SCALE_FACT_MIN = 0.5
+PAD_FACTOR = 0.25
 
 
 class GameWorld2D:
@@ -11,11 +12,11 @@ class GameWorld2D:
     def __resize(self, width, height):
         self.game_width = width
         self.game_height = height
-        self.pad_height = int(height * 0.15)
+        self.pad_height = int(height * PAD_FACTOR)
         self.pad_rect = pygame.Rect(width - self.pad_width,
                                     (height - self.pad_height) / 2,
                                     self.pad_width, self.pad_height)
-        self.ball_radius = int(self.pad_height * 0.12)
+        self.ball_radius = int(self.pad_height * 0.2)
         self.ball_rect = pygame.Rect(width / 2 - self.ball_radius,
                                      height / 2 - self.ball_radius,
                                      2 * self.ball_radius,
@@ -60,7 +61,7 @@ class GameWorld2D:
     def difficulty_level_to_color(self):
         # color is mapped from red to violet as the difficulty level goes
         # up. Maximum difficulty can be hard coded
-        MAX_LEVEL = 50
+        MAX_LEVEL = 40
         wavelength = 750 - (370/MAX_LEVEL) * self.level_minus_1
         return utils.effects.wavelength_to_rgb(wavelength)
 
@@ -122,7 +123,7 @@ class GameWorld2D:
         if self.ball_rect.left <= 0:
             self.ball_v_x *= -1
 
-        # Letting the ball past left wall
+        # Letting the ball past right wall
         if self.ball_rect.right >= self.game_width:
             self.score_down()
             self.restart()
@@ -136,7 +137,7 @@ class GameWorld3D(GameWorld2D):
     # Z into the screen
     def __resize3d(self, width, depth):
         self.game_depth = depth
-        self.pad_depth = int(depth * 0.15)
+        self.pad_depth = int(depth * PAD_FACTOR)
         self.pad_rect_bottom_view = pygame.Rect(width - self.pad_width,
                                                 (depth - self.pad_depth) / 2,
                                                 self.pad_width, self.pad_depth)
@@ -249,12 +250,14 @@ class GameWorld3D(GameWorld2D):
 
     def update(self, pad_yz):
         if pad_yz:
+            # Update the paddle y position
             self.pad_rect.y = pad_yz[0]
             if self.pad_rect.top <= 0:
                 self.pad_rect.top = 0
             if self.pad_rect.bottom >= self.game_height:
                 self.pad_rect.bottom = self.game_height
 
+            # Update the paddle z position
             self.pad_rect_bottom_view.y = pad_yz[1]
             if self.pad_rect_bottom_view.top <= 0:
                 self.pad_rect_bottom_view.top = 0
@@ -263,6 +266,7 @@ class GameWorld3D(GameWorld2D):
 
         self.ball_rect.x += self.ball_v_x
         self.ball_rect.y += self.ball_v_y
+        self.ball_rect_bottom_view.x += self.ball_v_x
         self.ball_rect_bottom_view.y += self.ball_v_z
 
         # Bouncing off the paddle if collision detected on both views
@@ -310,7 +314,7 @@ class GameWorld3D(GameWorld2D):
         if self.ball_rect.left <= 0:
             self.ball_v_x *= -1
 
-        # Letting the ball past left wall
+        # Letting the ball past right wall
         if self.ball_rect.right >= self.game_width:
             self.score_down()
             self.restart()
