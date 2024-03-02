@@ -15,11 +15,11 @@ screen = pygame.display.set_mode((screen_width, screen_height),
                                  pygame.RESIZABLE)
 background = pygame.image.load("bg_galaxy.png")
 background_rect = background.get_rect(topleft=(0, 0))
-visual_in = utils.gesture_capture.HandToPaddle()
 
 
 def main():
     pygame.display.set_caption('Pong with Hand Gestures: Menu')
+    visual_in = utils.gesture_capture.HandToPaddle()
     while True:
         global screen
         screen.fill("black")
@@ -47,10 +47,10 @@ def main():
                                                  3 * screen_height / 5),
                                 text_input="PLAY IN 3D", font=get_font(75),
                                 base_color="#d7fcd4", hovering_color="White"))
-        settings3d_button = (
+        settings_button = (
             utils.button.Button(image=None, pos=(4 * screen_width / 5,
                                                  3 * screen_height / 5),
-                                text_input="3D SETTING", font=get_font(75),
+                                text_input="SETTINGS", font=get_font(75),
                                 base_color="#d7fcd4", hovering_color="White"))
         quit_button = (
             utils.button.Button(image=None, pos=(screen_width/2,
@@ -64,7 +64,7 @@ def main():
             pyautogui.moveTo(finger_tip_mouse)
 
         for button in [play2d_button, play2d_head2head_button,
-                       play3d_button, settings3d_button, quit_button]:
+                       play3d_button, settings_button, quit_button]:
             button.change_color(menu_mouse_pos)
             button.update(screen)
 
@@ -79,6 +79,8 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if play2d_button.check_for_input(menu_mouse_pos):
                     play2d_solo()
+                if play2d_head2head_button.check_for_input(menu_mouse_pos):
+                    play2d_2player()
                 if play3d_button.check_for_input(menu_mouse_pos):
                     play3d_solo()
                 if quit_button.check_for_input(menu_mouse_pos):
@@ -91,6 +93,7 @@ def main():
 
 def play2d_solo():
     pygame.display.set_caption('Pong with Hand Gestures: Hand Solo')
+    visual_in = utils.gesture_capture.HandToPaddle()
     global screen
     gw = utils.game_mechanics.GameWorld2D(screen_width, screen_height)
 
@@ -136,9 +139,54 @@ def play2d_solo():
     main()
 
 
+def play2d_2player():
+    pygame.display.set_caption('Pong with Hand Gestures: Two\'s Complement')
+    global screen
+    visual_in = utils.gesture_capture.Hands2ToPaddles()
+    gw = utils.game_mechanics.GameWorld2D2Players(screen_width, screen_height)
+
+    # player1's hand on the right side of the screen, and
+    # player2's hand on the left side of the screen
+
+    flag_dont_render = 1
+    pad1_updated, pad2_updated = visual_in.update2d()
+
+    run = True
+    while run:
+        if not (flag_dont_render % interpolation_steps):
+            pad1_updated, pad2_updated = visual_in.update2d()
+
+        gw.update_2player(pad1_updated, pad2_updated)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    run = False
+
+            if event.type == pygame.VIDEORESIZE:
+                gw.resize(event.w, event.h)
+                screen = pygame.display.set_mode((event.w, event.h),
+                                                 pygame.RESIZABLE)
+
+        if not (flag_dont_render % interpolation_steps):
+            # screen.fill("black")
+            screen.blit(background, background_rect)
+            gw.render_elements(screen)
+            pygame.display.flip()
+
+        flag_dont_render = (flag_dont_render + 1) % interpolation_steps
+        clock.tick(frame_rate)
+
+    main()
+
+
 def play3d_solo():
     pygame.display.set_caption('Pong with Hand Gestures: in a 3D Galaxy Far '
                                'Far Away')
+    visual_in = utils.gesture_capture.HandToPaddle()
     global screen
     gw = utils.game_mechanics.GameWorld3D(screen_width, screen_height,
                                           screen_height)

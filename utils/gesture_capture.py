@@ -7,7 +7,6 @@ import math
 class HandToPaddle:
 
     def __init__(self, hand_speed=3, hand_resting_height=0.25):
-        self.hand_speed_factor = hand_speed
         # self.paddle_half_h = 10   # Not needed
         self.cap = cv2.VideoCapture(0)
         self.detector = HandDetector(maxHands=1)
@@ -21,7 +20,7 @@ class HandToPaddle:
         self.focus_factor = 50000
         self.depth_cutoff = 900
 
-    def update2d(self):
+    def update2d(self, hand_speed=3):
         self.success, self.img = self.cap.read()
         if self.success:
             hand, self.img = self.detector.findHands(self.img, draw=False)
@@ -29,11 +28,11 @@ class HandToPaddle:
                 _, hand_height = hand[0]["center"]
                 hand_from_center = hand_height - self.hand_neutral_height
                 paddle_y = int(self.hand_neutral_height
-                               + hand_from_center * self.hand_speed_factor)
+                               + hand_from_center * hand_speed)
                 return paddle_y
             return False
 
-    def update3d(self):
+    def update3d(self, hand_speed=4):
         self.success, self.img = self.cap.read()
         if self.success:
             hand, self.img = self.detector.findHands(self.img, draw=False)
@@ -41,7 +40,7 @@ class HandToPaddle:
                 _, hand_height = hand[0]["center"]
                 hand_from_center = hand_height - self.hand_neutral_height
                 paddle_y = int(self.hand_neutral_height
-                               + hand_from_center * self.hand_speed_factor)
+                               + hand_from_center * hand_speed)
                 bbox = hand[0]["bbox"]
                 pad_z = self.depth_cutoff - int(self.focus_factor /
                                                 math.sqrt(bbox[2] * bbox[3]))
@@ -81,7 +80,7 @@ class HandToPaddle:
                 return [mouse_out_x, mouse_out_y]
             return False
 
-    def set_gesture_preferences_3d(self):
+    def set_gesture_preferences_3d(self, hand_speed=3):
         paddle_xl = self.img_w - 10
         paddle_xr = self.img_w - 5
         self.success, self.img = self.cap.read()
@@ -91,7 +90,7 @@ class HandToPaddle:
                 _, hand_height = hand[0]["center"]
                 hand_from_center = hand_height - self.hand_neutral_height
                 paddle_y = int(self.hand_neutral_height
-                               + hand_from_center * self.hand_speed_factor)
+                               + hand_from_center * hand_speed)
                 bbox = hand[0]["bbox"]
                 pad_z = self.depth_cutoff - int(self.focus_factor /
                                                 math.sqrt(bbox[2] * bbox[3]))
@@ -102,3 +101,39 @@ class HandToPaddle:
                 return paddle_y, pad_z
             cv2.imshow("cam", self.img)
             return False
+
+
+class Hands2ToPaddles:
+
+    def __init__(self, hand_speed=3, hand_resting_height=0.25):
+        # self.paddle_half_h = 10   # Not needed
+        self.cap = cv2.VideoCapture(0)
+        self.detector = HandDetector(maxHands=2)
+
+        self.success, self.img = self.cap.read()
+        self.img_h, self.img_w, _ = self.img.shape
+
+        # Let's change the resting hand to the lower potion of the webcam for
+        # better ergonomics
+        self.hand_neutral_height = int(self.img_h * (1-hand_resting_height))
+        self.focus_factor = 50000
+        self.depth_cutoff = 900
+
+    def update2d(self, hand_speed=3):
+        self.success, self.img = self.cap.read()
+        paddles_y = [False, False]
+        if self.success:
+            hands, self.img = self.detector.findHands(self.img, draw=False)
+            for hand in hands:
+                if hand:
+                    hand_x, hand_height = hand["center"]
+                    hand_from_center = hand_height - self.hand_neutral_height
+                    paddle_y = int(self.hand_neutral_height
+                                   + hand_from_center * hand_speed)
+                    if hand_x <= self.img_w / 2:
+                        # Player on the right appears on the left of img
+                        paddles_y[0] = paddle_y
+                    else:
+                        paddles_y[1] = paddle_y
+
+        return paddles_y
