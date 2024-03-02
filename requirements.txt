@@ -1,0 +1,4 @@
+pygame~=2.5.2
+opencv-python~=4.9.0.80
+PyAutoGUI~=0.9.54
+cvzone~=1.6.1
