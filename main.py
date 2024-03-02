@@ -47,11 +47,11 @@ def main():
                                                  3 * screen_height / 5),
                                 text_input="PLAY IN 3D", font=get_font(75),
                                 base_color="#d7fcd4", hovering_color="White"))
-        settings_button = (
-            utils.button.Button(image=None, pos=(4 * screen_width / 5,
-                                                 3 * screen_height / 5),
-                                text_input="SETTINGS", font=get_font(75),
-                                base_color="#d7fcd4", hovering_color="White"))
+        # settings_button = (
+        #     utils.button.Button(image=None, pos=(4 * screen_width / 5,
+        #                                          3 * screen_height / 5),
+        #                         text_input="SETTINGS", font=get_font(75),
+        #                         base_color="#d7fcd4", hovering_color="White"))
         quit_button = (
             utils.button.Button(image=None, pos=(screen_width/2,
                                                  4 * screen_height / 5),
@@ -64,7 +64,7 @@ def main():
             pyautogui.moveTo(finger_tip_mouse)
 
         for button in [play2d_button, play2d_head2head_button,
-                       play3d_button, settings_button, quit_button]:
+                       play3d_button, quit_button]:
             button.change_color(menu_mouse_pos)
             button.update(screen)
 
