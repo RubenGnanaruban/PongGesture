@@ -2,6 +2,7 @@ import pygame
 import utils
 import sys
 import pyautogui
+import threading
 
 pygame.init()
 screen_width = int(0.8 * pygame.display.Info().current_w)
@@ -22,7 +23,7 @@ def main():
     visual_in = utils.gesture_capture.HandToPaddle()
     while True:
         global screen
-        screen.fill("black")
+        # screen.fill("black")
         screen.blit(background, background_rect)
 
         menu_mouse_pos = pygame.mouse.get_pos()
