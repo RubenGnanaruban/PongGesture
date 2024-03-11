@@ -48,11 +48,11 @@ def main():
                                                  3 * screen_height / 5),
                                 text_input="PLAY IN 3D", font=get_font(75),
                                 base_color="#d7fcd4", hovering_color="White"))
-        # settings_button = (
-        #     utils.button.Button(image=None, pos=(4 * screen_width / 5,
-        #                                          3 * screen_height / 5),
-        #                         text_input="SETTINGS", font=get_font(75),
-        #                         base_color="#d7fcd4", hovering_color="White"))
+        settings_button = (
+            utils.button.Button(image=None, pos=(4 * screen_width / 5,
+                                                 3 * screen_height / 5),
+                                text_input="SETTINGS", font=get_font(75),
+                                base_color="#d7fcd4", hovering_color="White"))
         quit_button = (
             utils.button.Button(image=None, pos=(screen_width/2,
                                                  4 * screen_height / 5),
@@ -65,7 +65,7 @@ def main():
             pyautogui.moveTo(finger_tip_mouse)
 
         for button in [play2d_button, play2d_head2head_button,
-                       play3d_button, quit_button]:
+                       play3d_button, settings_button, quit_button]:
             button.change_color(menu_mouse_pos)
             button.update(screen)
 
@@ -84,6 +84,8 @@ def main():
                     play2d_2player()
                 if play3d_button.check_for_input(menu_mouse_pos):
                     play3d_solo()
+                if settings_button.check_for_input(menu_mouse_pos):
+                    update_settings()
                 if quit_button.check_for_input(menu_mouse_pos):
                     pygame.quit()
                     sys.exit()
@@ -101,8 +103,8 @@ def play2d_solo():
     # Screen and camera are limited by their frame rates. But running the
     # whole model at that slow rate would make the delta displacements too
     # much to account for collisions (at higher speeds).
-    # Therefore, we decouple updating the elements and renderings.
-    # flag_dont_render is used to skip rendering for all but onc in every 50
+    # Therefore, we decouple updating the elements and rendering.
+    # flag_dont_render is used to skip rendering for all but once in every 50
     # interpolation_steps
 
     flag_dont_render = 1
@@ -223,6 +225,85 @@ def play3d_solo():
 
         flag_dont_render = (flag_dont_render + 1) % interpolation_steps
         clock.tick(frame_rate)
+
+    main()
+
+
+def update_settings():
+    pygame.display.set_caption('Settings: Coming Soon')
+    visual_in = utils.gesture_capture.HandToPaddle()
+    global screen
+
+    run = True
+    while run:
+        screen.blit(background, background_rect)
+        menu_mouse_pos = pygame.mouse.get_pos()
+
+        menu_text = get_font(100).render("SETTINGS", True, "#b68f40")
+        menu_rect = menu_text.get_rect(center=(screen_width / 2,
+                                               screen_height / 5))
+        screen.blit(menu_text, menu_rect)
+
+        volume_button = (
+            utils.button.Button(image=None, pos=(screen_width / 5,
+                                                 2 * screen_height / 5),
+                                text_input="TURN OFF VOLUME", font=get_font(
+                    75),
+                                base_color="#d7fcd4", hovering_color="White"))
+        gpu_button = (
+            utils.button.Button(image=None, pos=(4 * screen_width / 5,
+                                                 2 * screen_height / 5),
+                                text_input="GPU RENDER", font=get_font(75),
+                                base_color="#d7fcd4", hovering_color="White"))
+        # play3d_button = (
+        #     utils.button.Button(image=None, pos=(screen_width / 5,
+        #                                          3 * screen_height / 5),
+        #                         text_input="PLAY IN 3D", font=get_font(75),
+        #                         base_color="#d7fcd4", hovering_color="White"))
+        # settings_button = (
+        #     utils.button.Button(image=None, pos=(4 * screen_width / 5,
+        #                                          3 * screen_height / 5),
+        #                         text_input="SETTINGS", font=get_font(75),
+        #                         base_color="#d7fcd4", hovering_color="White"))
+        back_button = (
+            utils.button.Button(image=None, pos=(screen_width / 2,
+                                                 4 * screen_height / 5),
+                                text_input="BACK", font=get_font(75),
+                                base_color="#d7fcd4", hovering_color="White"))
+
+        finger_tip_mouse = visual_in.get_camera_to_mouse(screen_width,
+                                                         screen_height)
+        if finger_tip_mouse:
+            pyautogui.moveTo(finger_tip_mouse)
+
+        for button in [volume_button, gpu_button, back_button]:
+            button.change_color(menu_mouse_pos)
+            button.update(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    run = False
+
+            if event.type == pygame.VIDEORESIZE:
+                # gw.resize(event.w, event.h) # Need to address this
+                screen = pygame.display.set_mode((event.w, event.h),
+                                                 pygame.RESIZABLE)
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # if play2d_button.check_for_input(menu_mouse_pos):
+                #     play2d_solo()
+                # if play2d_head2head_button.check_for_input(menu_mouse_pos):
+                #     play2d_2player()
+                # if play3d_button.check_for_input(menu_mouse_pos):
+                #     play3d_solo()
+                if back_button.check_for_input(menu_mouse_pos):
+                    run = False
+
+        pygame.display.update()
+        clock.tick(refresh_rate)
 
     main()
 
