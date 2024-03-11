@@ -428,6 +428,31 @@ class GameWorld3D(GameWorld2D):
                                    self.pad_rect_bottom_view.top))
         pygame.draw.polygon(screen, pygame.Color('chocolate1'), [p1, p2, p3,
                                                                  p4])
+        # Closest stripe:
+        p1_right = self.transform_to_2d((self.pad_rect.right,
+                                         self.pad_rect.top,
+                                         self.pad_rect_bottom_view.top))
+        p4_right = self.transform_to_2d((self.pad_rect.right,
+                                         self.pad_rect.bottom,
+                                         self.pad_rect_bottom_view.top))
+        pygame.draw.polygon(screen, pygame.Color('beige'),
+                            [p1, p4, p4_right, p1_right])
+
+        # Top surface of the pad:
+        if self.pad_rect.y > self.game_height / 2:
+            p2_right = self.transform_to_2d((self.pad_rect.right,
+                                             self.pad_rect.top,
+                                             self.pad_rect_bottom_view.bottom))
+            pygame.draw.polygon(screen, pygame.Color('bisque1'),
+                                [p1, p1_right, p2_right, p2])
+
+        # Bottom surface of the pad
+        if self.pad_rect.y < self.game_height / 2:
+            p3_right = self.transform_to_2d((self.pad_rect.right,
+                                             self.pad_rect.bottom,
+                                             self.pad_rect_bottom_view.bottom))
+            pygame.draw.polygon(screen, pygame.Color('bisque1'),
+                                [p3, p3_right, p4_right, p4])
 
     def project_ball(self, screen, ball_color):
         ball_scale = self.scale_perspective(self.ball_rect_bottom_view.y)
