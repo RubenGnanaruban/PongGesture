@@ -258,12 +258,12 @@ def update_settings():
         #     utils.button.Button(image=None, pos=(screen_width / 5,
         #                                          3 * screen_height / 5),
         #                         text_input="PLAY IN 3D", font=get_font(75),
-        #                         base_color="#d7fcd4", hovering_color="White"))
+        #                        base_color="#d7fcd4", hovering_color="White"))
         # settings_button = (
         #     utils.button.Button(image=None, pos=(4 * screen_width / 5,
         #                                          3 * screen_height / 5),
         #                         text_input="SETTINGS", font=get_font(75),
-        #                         base_color="#d7fcd4", hovering_color="White"))
+        #                        base_color="#d7fcd4", hovering_color="White"))
         back_button = (
             utils.button.Button(image=None, pos=(screen_width / 2,
                                                  4 * screen_height / 5),
