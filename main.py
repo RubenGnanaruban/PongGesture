@@ -2,12 +2,13 @@ import pygame
 import utils
 import sys
 import pyautogui
-import threading
+import time
 
+pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=2)
 pygame.init()
 screen_width = int(0.8 * pygame.display.Info().current_w)
 screen_height = int(0.8 * pygame.display.Info().current_h)
-refresh_rate = 30
+refresh_rate = 40
 interpolation_steps = 50
 frame_rate = interpolation_steps * refresh_rate
 clock = pygame.time.Clock()
@@ -20,7 +21,7 @@ background_rect = background.get_rect(topleft=(0, 0))
 
 def main():
     pygame.display.set_caption('Pong with Hand Gestures: Menu')
-    visual_in = utils.gesture_capture.HandToPaddle()
+    # visual_in = utils.gesture_capture.HandToPaddle()
     while True:
         global screen
         # screen.fill("black")
@@ -59,10 +60,10 @@ def main():
                                 text_input="QUIT", font=get_font(75),
                                 base_color="#d7fcd4", hovering_color="White"))
 
-        finger_tip_mouse = visual_in.get_camera_to_mouse(screen_width,
-                                                         screen_height)
-        if finger_tip_mouse:
-            pyautogui.moveTo(finger_tip_mouse)
+        # finger_tip_mouse = visual_in.get_camera_to_mouse(screen_width,
+        #                                                  screen_height)
+        # if finger_tip_mouse:
+        #     pyautogui.moveTo(finger_tip_mouse)
 
         for button in [play2d_button, play2d_head2head_button,
                        play3d_button, settings_button, quit_button]:
@@ -109,13 +110,22 @@ def play2d_solo():
 
     flag_dont_render = 1
     pad_updated = visual_in.update2d()
+    # visual_in.update2d()
+    # pad_updated = visual_in.paddle_y
 
     run = True
     while run:
+        t1 = time.perf_counter()
         if not (flag_dont_render % interpolation_steps):
             pad_updated = visual_in.update2d()
-
+            # visual_in.update2d()
+            # pad_updated = visual_in.paddle_y
+            t2 = time.perf_counter()
+            print(f'Cap_pro: {round(t2 - t1, 3)}')
+        # t1 = time.perf_counter()
         gw.update(pad_updated)
+        # t2 = time.perf_counter()
+        # print(f'update: {round(t2 - t1, 7)}')
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
