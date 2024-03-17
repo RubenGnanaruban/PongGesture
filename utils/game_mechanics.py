@@ -1,6 +1,7 @@
 import pygame
 import random
 import utils.effects
+# import time
 
 MAX_LEVEL = 50
 TOL_DIST = 10
@@ -37,7 +38,9 @@ class GameWorld2D:
         self.level_minus_1 = 0
         self.score_font = pygame.font.SysFont("Arial", self.pad_height)
         self.score_sound = pygame.mixer.Sound("score.ogg")
+        self.score_sound.set_volume(0.5)
         self.miss_sound = pygame.mixer.Sound("pong.ogg")
+        self.miss_sound.set_volume(0.5)
         self.ball_x = width / 2
         self.ball_y = height / 2
         self.pad_y = height / 2
@@ -62,8 +65,11 @@ class GameWorld2D:
     def score_up(self):
         self.score_hit += 1
         self.level_minus_1 += 1
-
-        pygame.mixer.Sound.play(self.score_sound)
+        # t3 = time.perf_counter()
+        self.score_sound.play()
+        # pygame.mixer.Sound.play(self.score_sound)
+        # t4 = time.perf_counter()
+        # print(f'play sound: {round(t4 - t3, 7)}')
 
         # Continue in the same direction with a speed increase of 1
         self.ball_v_x += V_DEL * self.ball_v_x / abs(self.ball_v_x)
@@ -71,8 +77,8 @@ class GameWorld2D:
 
     def score_down(self):
         self.score_miss += 1
-
-        pygame.mixer.Sound.play(self.miss_sound)
+        self.miss_sound.play()
+        # pygame.mixer.Sound.play(self.miss_sound)
 
     def difficulty_level_to_color(self):
         # color is mapped from red to violet as the difficulty level goes
@@ -210,8 +216,8 @@ class GameWorld2D2Players(GameWorld2D):
     def hit_ball(self):
         # When either player hits the ball
         self.level_minus_1 += 1
-
-        pygame.mixer.Sound.play(self.score_sound)
+        self.score_sound.play()
+        # pygame.mixer.Sound.play(self.score_sound)
 
         # Continue in the same direction with a speed increase of 1
         self.ball_v_x += V_DEL * self.ball_v_x / abs(self.ball_v_x)
@@ -219,13 +225,13 @@ class GameWorld2D2Players(GameWorld2D):
 
     def score_1_up(self):
         self.score_hit += 1
-
-        pygame.mixer.Sound.play(self.miss_sound)
+        self.miss_sound.play()
+        # pygame.mixer.Sound.play(self.miss_sound)
 
     def score_2_up(self):
         self.score_miss += 1
-
-        pygame.mixer.Sound.play(self.miss_sound)
+        self.miss_sound.play()
+        # pygame.mixer.Sound.play(self.miss_sound)
 
     def render_elements(self, screen):
         # Paddle1
