@@ -1,11 +1,15 @@
 # Pong with Hand Gesture Tracking
 
-## A cross-platform project written in Python - Pygame!
+## A Cross-Platform Project Written in Python - Pygame!
 
-This repository contains the code for a Pong video game developed in Python. The unique aspect of this game is the control mechanism - the player uses hand gestures captured by the laptop's webcam to move the paddle. This project integrates computer vision techniques with real-time game mechanics.
+This repository contains the code for a Pong video game developed in Python.
+The unique aspect of this game is the control mechanism - the player uses 
+hand gestures captured by the laptop's webcam to move the paddle. This 
+project integrates computer vision techniques with real-time game mechanics.
 
 ## Key Features
-- Game Interface: A classic Pong game with a bouncing ball and a player-controlled paddle.
+- Game Interface: A classic Pong game with a bouncing ball and a 
+  player-controlled paddle.
 - Control Mechanism: The player's hand position in the webcam feed 
   determines the paddle's vertical movement.
 - Difficulty Level: The game starts slow and gradually increases ball speed 
@@ -15,7 +19,8 @@ This repository contains the code for a Pong video game developed in Python. The
 
 ## Game Modes:
 ### Solo Mode (2D):
-Single hand controls the paddle vertically based on hand position in the webcam feed.
+Single hand controls the paddle vertically based on hand position in the 
+webcam feed.
 Players score points for hitting the ball and lose points for missing it.
 ### Two Player Mode (2D):
 Player on the left side of the screen controls the left paddle based on 
@@ -26,46 +31,72 @@ Players score points when their opponent misses the ball.
 ### Solo Mode (3D): (Most difficult to master)
 Single hand controls the paddle.
 Vertical hand movement controls the paddle up and down (like 2D mode).
-Forward and backward hand movement controls the paddle moving in and out of the screen (depth).
+Forward and backward hand movement controls the paddle moving in and out of 
+the screen (depth).
 
-## What else?
+## What Else?
 ### Movement that Feels Natural: Beyond Button Presses
 Traditionally, Pong games relied on button presses to control the paddle. 
 While effective, this approach doesn't translate well to real-world 
 interactions.  Imagine hitting a real ping pong ball - you wouldn't 
 repeatedly tap or long press a button!
 
-This game takes a different approach. By using hand tracking, your movements in the air directly translate to the paddle's movement on screen. This intuitive control scheme feels more natural, especially when playing the 3D version where depth adds another layer of realism. 
+This game takes a different approach. By using hand tracking, your 
+movements in the air directly translate to the paddle's movement on screen. 
+This intuitive control scheme feels more natural, especially when playing 
+the 3D version where depth adds another layer of realism. 
 It's like you're truly pushing the paddle through the air to hit the ball!
 
 ### Immerse Yourself in the Game: Sound and Visual Cues
-The game provides immediate feedback through engaging sound effects and subtle visual changes to keep you in the zone:
+The game provides immediate feedback through engaging sound effects and 
+subtle visual changes to keep you in the zone:
 
 #### Sound Effects: 
-A satisfying sound rings out when your paddle makes contact with the ball, keeping you informed of your successful hits. Additionally, a distinct sound effect plays when you miss a shot, letting you know it's time to refocus.
+A satisfying sound rings out when your paddle makes contact with the ball, 
+keeping you informed of your successful hits. Additionally, a distinct 
+sound effect plays when you miss a shot, letting you know it's time to refocus.
 
 #### Level Up with Color: 
-As the game progresses and the difficulty ramps up, the ball subtly transforms its color. It starts as a fiery red, and as you conquer each level, it transitions through the color spectrum like a mini-rainbow, giving you a visual cue of your growing mastery.
+As the game progresses and the difficulty ramps up, the ball subtly 
+transforms its color. It starts as a fiery red, and as you conquer each 
+level, it transitions through the color spectrum like a mini-rainbow, 
+giving you a visual cue of your growing mastery.
 
 
-## Watch the demonstration!
+## Watch the Demonstration!
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/HRtrJVmU2lw?si=NcBvE8pKqgG3q2NQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 
-## Technical features
-### More real-world like due to added physics: 
+## Technical Features
+### More Real-World Like Due to Added Physics: 
 The paddle's impact transfers horizontal momentum to the ball upon contact. 
 This interaction, however, isn't frictionless. 
 The brief moment of impact also introduces an impulsive frictional force that 
 acts in the opposite direction of the ball's movement relative to the paddle. 
 Imagine it like a tiny braking effect. This frictional force can be 
 approximated as a step change in the ball's vertical velocity. 
-That's the secret sauce! By strategically using the paddle's movement, skilled players can exploit this friction to slow down the ball's bounce, giving them more control over the game.
-### Decoupled update and refresh
-The game logic and element updates run at a much higher rate than both the screen's refresh rate and the webcam's capture frequency. 
-This clever design ensures the ball can travel at high speeds without ever appearing to teleport past the paddle or walls. 
-In the background, interpolation steps seamlessly track the precise movements of all elements, creating a smooth and responsive gameplay experience.
+That's the secret sauce! By strategically using the paddle's movement, 
+skilled players can exploit this friction to slow down the ball's bounce, 
+giving them more control over the game.
+### Decoupled Update and Refresh
+The game logic and element updates run at a much higher rate than both the 
+screen's refresh rate and the webcam's capture frequency. 
+This clever design ensures the ball can travel at high speeds without ever 
+appearing to teleport past the paddle or walls. 
+In the background, interpolation steps seamlessly track the precise movements
+of all elements, creating a smooth and responsive gameplay experience.
+### Boosting Frame Rate with Multithreading
+Gesture capture applications often face a bottleneck between capturing 
+images (an I/O bound operation) and processing them. 
+While multithreading in Python might not be as efficient as multiprocessing 
+on separate cores, it remains a strong approach due to data sharing 
+overhead (large image frames).
+To optimize performance, we leverage multithreading by spawning two threads 
+at each gesture capture update. One thread focuses on acquiring the image, 
+while the other simultaneously extracts hand data and performs further 
+processing. This allows for some overlap between these tasks, potentially 
+leading to smoother frame rates.
 
 ## Find a bug?
 
