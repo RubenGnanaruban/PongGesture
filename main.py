@@ -60,12 +60,13 @@ def main():
                                 text_input="QUIT", font=get_font(75),
                                 base_color="#d7fcd4", hovering_color="White"))
 
-        finger_tip_mouse = visual_in.update_mouse_from_webcam(screen_width,
-                                                              screen_height)
-        # finger_tip_mouse = visual_in.get_camera_to_mouse(screen_width,
-        #                                                  screen_height)
+        # finger_tip_mouse = visual_in.update_mouse_from_webcam(screen_width,
+        #                                                       screen_height)
+        finger_tip_mouse = visual_in.get_camera_to_mouse(screen_width,
+                                                         screen_height)
         if finger_tip_mouse:
-            pyautogui.moveTo(finger_tip_mouse)
+            pygame.mouse.set_pos(finger_tip_mouse)
+            # pyautogui.moveTo(finger_tip_mouse)
 
         for button in [play2d_button, play2d_head2head_button,
                        play3d_button, settings_button, quit_button]:

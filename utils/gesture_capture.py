@@ -240,10 +240,10 @@ class HandToPaddle:
                           + hand_from_center_x * motion_amplifier)
             mouse_y = int(screen_height / 2
                           + hand_from_center_y * motion_amplifier)
-            self.paddle_z = max(0, min(mouse_x, screen_width))
-            self.paddle_y = max(0, min(mouse_y, screen_height))
+            self.paddle_z = max(0, min(mouse_x, screen_width - 1))
+            self.paddle_y = max(0, min(mouse_y, screen_height - 1))
             thumb_x, thumb_y, _ = hand[0]["lmList"][4]
-            length, _, _ = (
+            length, info, _ = (
                 self.detector.findDistance((thumb_x, thumb_y), (x, y)))
             if length / hand[0]["bbox"][2] < 0.2:
                 pyautogui.click()
@@ -274,39 +274,39 @@ class HandToPaddle:
         self.flag_img_write = not self.flag_img_write
         return [self.paddle_z, self.paddle_y]
 
-    # def get_camera_to_mouse(self, screen_width, screen_height):
-    #     # This module is used at the menu screen.
-    #     # When a hand is detected the location of the tip of the index
-    #     # finger is converted to usable mouse coordinates. Touching the tips
-    #     # of index finger and thumb makes the mouse to click.
-    #     success, self.img_0 = self.cap.read()
-    #     hand_neutral_y = int(self.img_h * 0.4)
-    #     hand_neutral_x = int(self.img_w / 2)
-    #     motion_amplifier = 3  # use a different hand_speed_factor here
-    #     if success:
-    #         hand, self.img_0 = self.detector.findHands(self.img_0, draw=False)
-    #         if hand:
-    #             x, y, _ = hand[0]["lmList"][8]
-    #             # x, y = hand[0]["center"]
-    #             # flip around vertical for mirroring
-    #             hand_from_center_x = hand_neutral_x - x
-    #             hand_from_center_y = y - hand_neutral_y
-    #             mouse_x = int(screen_width / 2
-    #                           + hand_from_center_x * motion_amplifier)
-    #             mouse_y = int(screen_height / 2
-    #                           + hand_from_center_y * motion_amplifier)
-    #
-    #             mouse_out_x = max(0, min(mouse_x, screen_width))
-    #             mouse_out_y = max(0, min(mouse_y, screen_height))
-    #
-    #             thumb_x, thumb_y, _ = hand[0]["lmList"][4]
-    #             length, info, _ = (
-    #                 self.detector.findDistance((thumb_x, thumb_y),
-    #                                            (x, y)))
-    #             if length / hand[0]["bbox"][2] < 0.2:
-    #                 pyautogui.click()
-    #             return [mouse_out_x, mouse_out_y]
-    #         return False
+    def get_camera_to_mouse(self, screen_width, screen_height):
+        # This module is used at the menu screen.
+        # When a hand is detected the location of the tip of the index
+        # finger is converted to usable mouse coordinates. Touching the tips
+        # of index finger and thumb makes the mouse to click.
+        success, self.img_0 = self.cap.read()
+        hand_neutral_y = int(self.img_h * 0.4)
+        hand_neutral_x = int(self.img_w / 2)
+        motion_amplifier = 3  # use a different hand_speed_factor here
+        if success:
+            hand, self.img_0 = self.detector.findHands(self.img_0, draw=False)
+            if hand:
+                x, y, _ = hand[0]["lmList"][8]
+                # x, y = hand[0]["center"]
+                # flip around vertical for mirroring
+                hand_from_center_x = hand_neutral_x - x
+                hand_from_center_y = y - hand_neutral_y
+                mouse_x = int(screen_width / 2
+                              + hand_from_center_x * motion_amplifier)
+                mouse_y = int(screen_height / 2
+                              + hand_from_center_y * motion_amplifier)
+
+                mouse_out_x = max(0, min(mouse_x, screen_width - 1))
+                mouse_out_y = max(0, min(mouse_y, screen_height - 1))
+
+                thumb_x, thumb_y, _ = hand[0]["lmList"][4]
+                length, info, _ = (
+                    self.detector.findDistance((thumb_x, thumb_y),
+                                               (x, y)))
+                if length / hand[0]["bbox"][2] < 0.2:
+                    pyautogui.click()
+                return [mouse_out_x, mouse_out_y]
+            return False
 
     # def set_gesture_preferences_3d(self):
     #     self.success, self.img = self.cap.read()
